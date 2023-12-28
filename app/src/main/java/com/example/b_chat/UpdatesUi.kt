@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 
@@ -36,7 +35,7 @@ fun UpdatesUi(mainViewModel: MainViewModel, mainNavController: NavHostController
             color = Color.White,
             fontSize = 19.sp,
             fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(10.dp, 15.dp, 0.dp, 0.dp).align(Alignment.Start),
+            modifier = Modifier.padding(10.dp, 20.dp, 0.dp, 5.dp).align(Alignment.Start),
             fontFamily = FontFamily.SansSerif,
         )
 
@@ -48,7 +47,6 @@ fun UpdatesUi(mainViewModel: MainViewModel, mainNavController: NavHostController
                     .height(190.dp)
                     .clickable {
                         mainViewModel.getComicInfo(api,mainViewModel.latestRelease[i].title,mainViewModel.latestRelease[i].image,mainViewModel.latestRelease[i].link ,mainNavController)
-
                     },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

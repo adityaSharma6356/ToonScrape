@@ -7,13 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,9 +37,12 @@ fun PopularTodayUi(
     mainNavController: NavHostController,
     api: Scrapper
 ){
+    val width = LocalConfiguration.current.screenWidthDp/3
+    val height = width*1.5
     Box(modifier = Modifier.background(Color(9,9,9))){
         Column(modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = height.dp)
             .background(Color(24, 24, 24, 255), RoundedCornerShape(0.dp, 0.dp, 30.dp, 30.dp))
         ) {
             Text(
@@ -45,11 +50,10 @@ fun PopularTodayUi(
                 color = Color.White,
                 fontSize = 19.sp,
                 fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(10.dp, 15.dp, 0.dp, 0.dp),
+                modifier = Modifier.padding(10.dp, 20.dp, 0.dp, 5.dp),
                 fontFamily = FontFamily.SansSerif
             )
-            val width = LocalConfiguration.current.screenWidthDp/3
-            val height = width*1.5
+
             Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(
@@ -60,20 +64,29 @@ fun PopularTodayUi(
                         .padding(0.dp, 5.dp, 0.dp, 15.dp)
                         .width((width).dp)
                         .clickable {
-                            mainViewModel.getComicInfo(api,mainViewModel.popularToday[it].title,mainViewModel.popularToday[it].image,mainViewModel.popularToday[it].link,mainNavController )
+                            mainViewModel.getComicInfo(
+                                api,
+                                mainViewModel.popularToday[it].title,
+                                mainViewModel.popularToday[it].image,
+                                mainViewModel.popularToday[it].link,
+                                mainNavController
+                            )
 
                         },
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        AsyncImage(
-                            model = mainViewModel.popularToday[it].image,
-                            contentDescription = "image",
+                        Box(
                             modifier = Modifier
-                                .height(height.dp)
-                                .padding(10.dp),
-                            filterQuality = FilterQuality.None,
-                            contentScale = ContentScale.FillHeight
-                        )
+                            .height(height.dp)
+                            .padding(10.dp)) {
+                            AsyncImage(
+                                model = mainViewModel.popularToday[it].image,
+                                contentDescription = "image",
+                                filterQuality = FilterQuality.None,
+                                contentScale = ContentScale.FillHeight,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(
                                 text = mainViewModel.popularToday[it].latestChapter,
@@ -102,9 +115,10 @@ fun PopularTodayUi(
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(10.dp, 0.dp),
+                                .padding(10.dp, 0.dp, 10.dp, 15.dp),
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 14.sp,
+                            maxLines = 2,
 //                        textAlign = TextAlign.Center
                         )
 

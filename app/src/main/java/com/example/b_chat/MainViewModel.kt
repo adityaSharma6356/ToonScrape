@@ -1,6 +1,10 @@
 package com.example.b_chat
 
+import android.content.Context
+import android.text.TextUtils.substring
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -10,28 +14,65 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 
 class MainViewModel : ViewModel() {
-
-    val chapterData = SnapshotStateList<String>()
+    var currentChapterName by mutableStateOf("")
+    var chapterData by mutableStateOf(ChaptersData(mutableStateOf(""),   listOf(),0))
     val latestRelease = SnapshotStateList<LatestRelease>()
     val popularToday = SnapshotStateList<PopularToday>()
     val topList = SnapshotStateList<TopContent>()
-    var comicInfo by mutableStateOf(ComicInfo("","","","","","","","","","","","","","", listOf()))
+    var comicInfo by mutableStateOf(ComicInfo("","","","","","","","","","","","","","", listOf(), ""))
     var prevLink = ""
     val prevChapter = ""
     var loading by mutableStateOf(false)
+    val preferences = "Web2ReadSharedStorage"
+    val preferences_comics = "Web2ReadSharedStorageSubscribedComics"
+    val subscribedComics = SnapshotStateList<ComicInfo>()
 
 
+    fun subscribe(comicInfo: ComicInfo, context: Context){
+        val existingList = getList(context).toMutableList()
+        existingList.remove(comicInfo)
+        existingList.add(comicInfo)
+        subscribedComics.clear()
+        subscribedComics.addAll(existingList)
+        subscribedComics.forEach { Log.d("subslog", it.title) }
+        saveList(existingList, context)
+    }
+    fun unSubscribe(comicInfo: ComicInfo, context: Context){
+        val existingList = getList(context).toMutableList()
+        existingList.remove(comicInfo)
+        subscribedComics.clear()
+        subscribedComics.addAll(existingList)
+        subscribedComics.forEach { Log.d("subslog", it.title) }
+        saveList(existingList, context)
+    }
+    fun saveList(list: List<ComicInfo>, context: Context) {
+        val editor = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).edit()
+        val gson = Gson()
+        val json = gson.toJson(list)
+        editor.putString(preferences_comics, json)
+        editor.apply()
+    }
+    fun getList(context: Context): List<ComicInfo> {
+        val gson = Gson()
+        val json = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).getString(preferences_comics, null)
+        val type = object : TypeToken<List<ComicInfo>>() {}.type
+        return gson.fromJson(json, type) ?: emptyList()
+    }
 
-    fun getAsura(api: Scrapper, link: String, mainNavController: NavController){
+
+    fun getAsura(api: Scrapper, show: Int, mainNavController: NavController? = null){
+        val current = comicInfo.chapters[show]
         viewModelScope.launch {
             loading = true
-            if(link!=prevChapter){
-                prevLink =  link
-                val fLink = link.substring(22)
+            if(current.link!=prevChapter){
+                prevLink = current.link
+                val fLink = current.link.substring(22)
                 val response = api.getAsura(fLink)
                 if(response.isSuccessful && response.body()!=null){
                     Log.d("asura", response.body().toString())
@@ -42,13 +83,20 @@ class MainViewModel : ViewModel() {
                     val images = mutableListOf<String>()
                     items.forEach {
                         val link = it.attr("src")
-                        images.add(link)
+                        images.add(
+                            link
+                        )
                     }
-                    chapterData.clear()
-                    chapterData.addAll(images)
+                    images.remove(images.first())
+                    chapterData = ChaptersData(
+                        mutableStateOf(current.name),
+                        images,
+                        show
+                    )
+                    currentChapterName = current.name
                 }
             }
-            mainNavController.navigate(Screen.ChapterUi.route){
+            mainNavController?.navigate(Screen.ChapterUi.route){
                 launchSingleTop = true
             }
             loading = false
@@ -118,7 +166,8 @@ class MainViewModel : ViewModel() {
                         postedOn = posted,
                         genre = genre,
                         chapters = chaptersL,
-                        followedBy = foll
+                        followedBy = foll,
+                        link = link
                     )
 
                 }
@@ -252,9 +301,15 @@ data class ComicInfo(
     val artist:String,
     val postedOn:String,
     val genre:String,
-    val chapters:List<Chapter>
+    val chapters:List<Chapter>,
+    val link:String
 )
 
+data class ChaptersData(
+    val name: MutableState<String>,
+    val pages: List<String>,
+    val index:Int
+)
 
 data class LatestRelease(
     val title: String,

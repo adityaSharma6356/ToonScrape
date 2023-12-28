@@ -18,11 +18,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -32,6 +39,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -74,15 +82,55 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
             )
             Column {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Card(modifier = Modifier
-                        .padding(30.dp, 60.dp, 20.dp, 0.dp)
-                        .size(180.dp, 270.dp), elevation = 10.dp, shape = RoundedCornerShape(20.dp)) {
-                        Image(
-                            painter = rememberAsyncImagePainter(model = mainViewModel.comicInfo.image, filterQuality = FilterQuality.High),
-                            contentDescription = "cover",
-                            contentScale = ContentScale.Crop,
-                        )
+                    Column() {
+                        Card(modifier = Modifier
+                            .padding(30.dp, 60.dp, 20.dp, 0.dp)
+                            .size(180.dp, 270.dp), elevation = CardDefaults.elevatedCardElevation(10.dp), shape = RoundedCornerShape(20.dp)) {
+                            Image(
+                                painter = rememberAsyncImagePainter(model = mainViewModel.comicInfo.image, filterQuality = FilterQuality.High),
+                                contentDescription = "cover",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        val context = LocalContext.current
+                        var subText by remember { mutableStateOf("Subscribe  ") }
+                        var painterIcon by remember { mutableStateOf(R.drawable.add_icon) }
+
+                        if(mainViewModel.subscribedComics.contains(mainViewModel.comicInfo)){
+                            painterIcon = R.drawable.done_icon
+                            subText = "Subscribed  "
+                        } else {
+                            painterIcon = R.drawable.add_icon
+                            subText = "Subscribe  "
+                        }
+                        Box(contentAlignment = Center, modifier = Modifier
+                            .padding(30.dp, 20.dp, 10.dp, 10.dp)
+                            .width(180.dp)
+                            .background(Color(255, 232, 170, 255), RoundedCornerShape(50))
+                            .clickable {
+                                if (mainViewModel.subscribedComics.contains(mainViewModel.comicInfo)) {
+                                    mainViewModel.unSubscribe(mainViewModel.comicInfo, context)
+                                } else {
+                                    mainViewModel.subscribe(mainViewModel.comicInfo, context)
+                                }
+                            }
+                            .padding(20.dp, 5.dp)
+                        ) {
+                            Row {
+                                Text(
+                                    text = subText,
+                                    color = Color(9, 9, 9),
+                                    fontFamily = FontFamily.SansSerif,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
+                                Icon(painter = painterResource(id = painterIcon), contentDescription = null, modifier = Modifier.size(25.dp), tint = Color(9,9,9))
+                            }
+                        }
                     }
+
+
                     Column(modifier = Modifier
                         .padding(top = 70.dp)
                         .weight(1f)) {
@@ -180,25 +228,27 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                         }
                     },
                     fontSize = 15.sp,
-                    modifier = Modifier.padding(20.dp, 30.dp, 20.dp, 0.dp),
+                    modifier = Modifier.padding(20.dp, 20.dp, 20.dp, 0.dp),
                     overflow = TextOverflow.Ellipsis,
                     fontFamily = FontFamily.SansSerif
                 )
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,color = Color.White
-                        )) {
-                            append("Synopsis\n")
-                        }
-                        withStyle(style = SpanStyle(color = Color(189, 189, 189, 255))) {
-                            append(mainViewModel.comicInfo.synopsis)
-                        }
-                    },
-                    fontSize = 15.sp,
-                    modifier = Modifier.padding(20.dp, 30.dp, 20.dp, 0.dp),
-                    overflow = TextOverflow.Ellipsis,
-                    fontFamily = FontFamily.SansSerif
-                )
+                if(mainViewModel.comicInfo.synopsis.isNotBlank()){
+                    Text(
+                        buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,color = Color.White
+                            )) {
+                                append("Synopsis\n")
+                            }
+                            withStyle(style = SpanStyle(color = Color(189, 189, 189, 255))) {
+                                append(mainViewModel.comicInfo.synopsis)
+                            }
+                        },
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(20.dp, 30.dp, 20.dp, 0.dp),
+                        overflow = TextOverflow.Ellipsis,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
                 Row(modifier = Modifier
                     .padding(top = 20.dp)
                     .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -207,12 +257,13 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .width(width.dp)
-                            .height(50.dp)
+                            .heightIn(min = 50.dp)
                             .background(Color(31, 31, 31, 255), RoundedCornerShape(10.dp))
+                            .padding(5.dp)
                             .clickable {
                                 mainViewModel.getAsura(
                                     api,
-                                    mainViewModel.comicInfo.chapters.last().link,
+                                    mainViewModel.comicInfo.chapters.lastIndex,
                                     mainNavController
                                 )
                             }
@@ -221,7 +272,6 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                             text = "Read " + mainViewModel.comicInfo.chapters.last().name,
                             color = Color(206, 206, 206, 255),
                             fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             fontSize = 18.sp,
                             fontFamily = FontFamily.SansSerif
@@ -231,13 +281,13 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .width(width.dp)
-                            .height(50.dp)
+                            .heightIn(min = 50.dp)
                             .background(Color(31, 31, 31, 255), RoundedCornerShape(10.dp))
                             .padding(5.dp)
                             .clickable {
                                 mainViewModel.getAsura(
                                     api,
-                                    mainViewModel.comicInfo.chapters.first().link,
+                                    0,
                                     mainNavController
                                 )
                             }
@@ -246,7 +296,6 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                             text = "Read " + mainViewModel.comicInfo.chapters.first().name,
                             color = Color(206, 206, 206, 255),
                             fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             fontSize = 17.sp,
                             fontFamily = FontFamily.SansSerif
@@ -265,13 +314,16 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                             rememberScrollState()
                         )
                    ) {
-                    mainViewModel.comicInfo.chapters.forEach {
-                        Column(modifier = Modifier.fillMaxWidth().clickable {
-                            mainViewModel.getAsura(
-                            api,
-                            it.link,
-                            mainNavController
-                        ) }) {
+                    mainViewModel.comicInfo.chapters.forEachIndexed { index, it ->
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                mainViewModel.getAsura(
+                                    api,
+                                    index,
+                                    mainNavController
+                                )
+                            }) {
                             Text(
                                 text = it.name,
                                 color = Color(206, 206, 206, 255),
@@ -289,12 +341,17 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                                 modifier = Modifier
                                     .padding(10.dp, 0.dp, 10.dp, 10.dp)
                             )
-                            Spacer(modifier = Modifier.align(CenterHorizontally).height(1.dp).fillMaxWidth().background(Color(9,9,9)
-                            ))
+                            Spacer(modifier = Modifier
+                                .align(CenterHorizontally)
+                                .height(1.dp)
+                                .fillMaxWidth()
+                                .background(
+                                    Color(9, 9, 9)
+                                ))
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(200.dp))
+                Spacer(modifier = Modifier.height(60.dp))
             }
         }
     }
