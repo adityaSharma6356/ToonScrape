@@ -11,9 +11,6 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 | <img alt="Screenshot 1" src="sample/one.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/thr.jpg" width="150"/> |
 |------------------------------------------------------------|------------------------------------------------------------|
 
-## Demo Video
-[Demo](https://drive.google.com/file/d/16THcRnmyTc4P0-XW5mW29tvRfH6wDcsX/view?usp=sharing)
-
 ### 2. Subscription Management
 - Users can subscribe to their favorite manhwa series for easy access and updates.
 <img alt="Screenshot 1" src="sample/two.jpg" width="150"/>
@@ -26,6 +23,8 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 | <img alt="Screenshot 1" src="sample/fiv.jpg" width="150"/> | <img alt="Screenshot 2" src="sample/six.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/fou.jpg" width="150"/> |
 |------------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------|
 
+## Demo Video
+[Demo](https://drive.google.com/file/d/16THcRnmyTc4P0-XW5mW29tvRfH6wDcsX/view?usp=sharing)
 
 
 ## Getting Started
