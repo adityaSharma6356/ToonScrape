@@ -31,8 +31,8 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 
 ### Prerequisites
 - Android Studio Hedgehog or later
-- Kotlin version: 1.5.21
-- Gradle version: 7.0.2
+- Kotlin version: 1.8
+- Gradle version: 8.2
 
 ### Clone the Repository
 ```bash
