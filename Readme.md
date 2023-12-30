@@ -8,7 +8,7 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 ### 1. Immersive Reading Mode
 - Full immersion mode allows system bars to disappear while reading, providing an immersive and distraction-free reading experience.
 
-| <img alt="Screenshot 1" src="sample/one.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/two.jpg" width="150"/> |
+| <img alt="Screenshot 1" src="sample/one.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/thr.jpg" width="150"/> |
 |------------------------------------------------------------|------------------------------------------------------------|
 
 ## Demo Video
