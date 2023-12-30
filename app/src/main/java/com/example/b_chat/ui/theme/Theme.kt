@@ -11,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
+import com.example.b_chat.MainTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val DarkColorScheme = darkColorScheme(
@@ -38,10 +39,12 @@ private val LightColorScheme = lightColorScheme(
 fun BChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = DarkColorScheme
     val systemUiController = rememberSystemUiController()
-    systemUiController.setSystemBarsColor(
+    systemUiController.setStatusBarColor(
         color = Color.Transparent,
         false
     )
+    systemUiController.setNavigationBarColor(MainTheme.lightBackground, false)
+    
 //        systemUiController.navigationBarDarkContentEnabled =
 
 

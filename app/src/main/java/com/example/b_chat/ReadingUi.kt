@@ -30,6 +30,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -49,6 +51,7 @@ fun ReadingUi(mainViewModel: MainViewModel, api: Scrapper){
     val state = rememberScrollState()
     val source = MutableInteractionSource()
     var show by remember {  mutableStateOf(false) }
+    val context = LocalContext.current
     AnimatedVisibility(visible = show, enter = fadeIn(), exit = fadeOut(), modifier = Modifier
         .zIndex(1f)
         .fillMaxWidth()
@@ -56,12 +59,17 @@ fun ReadingUi(mainViewModel: MainViewModel, api: Scrapper){
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(29, 29, 29, 255))
+                .background(MainTheme.background)
         ) {
+            val scope = rememberCoroutineScope()
             if(mainViewModel.chapterData.index<mainViewModel.comicInfo.chapters.lastIndex){
                 TextButton(onClick = {
-                    mainViewModel.getAsura(api, mainViewModel.chapterData.index+1)
-                    show = false }, modifier = Modifier
+                    scope.launch {
+                        mainViewModel.getAsura(api, mainViewModel.chapterData.index+1,null, context )
+                        show = false
+                        state.scrollTo(0)
+                    }
+                }, modifier = Modifier
                     .padding(20.dp)
                     .align(Alignment.BottomStart)) {
                     Icon(
@@ -96,8 +104,12 @@ fun ReadingUi(mainViewModel: MainViewModel, api: Scrapper){
 
             if(mainViewModel.chapterData.index>0){
                 TextButton(onClick = {
-                    mainViewModel.getAsura(api, mainViewModel.chapterData.index-1)
-                    show = false },modifier = Modifier
+                    scope.launch {
+                        mainViewModel.getAsura(api, mainViewModel.chapterData.index-1, null, context)
+                        show = false
+                        state.scrollTo(0)
+                    }
+                },modifier = Modifier
                     .padding(20.dp)
                     .align(Alignment.BottomEnd)) {
                     Text(text = "Next", fontSize = 14.sp, color = Color.White, fontFamily = FontFamily.SansSerif)
@@ -124,6 +136,8 @@ fun ReadingUi(mainViewModel: MainViewModel, api: Scrapper){
             show = !show
         },
         horizontalAlignment = Alignment.CenterHorizontally) {
+        val context = LocalContext.current
+//        mainViewModel.addReadChapter(mainViewModel.comicInfo.chapters[mainViewModel.chapterData.index].link, context)
         mainViewModel.chapterData.pages.forEach{ link ->
             val painter = rememberAsyncImagePainter(
                 model = link,

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,10 +17,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
+import java.util.HashSet
 
 class MainViewModel : ViewModel() {
+    var showSplashScreen by mutableStateOf(true)
     var currentChapterName by mutableStateOf("")
     var chapterData by mutableStateOf(ChaptersData(mutableStateOf(""),   listOf(),0))
     val latestRelease = SnapshotStateList<LatestRelease>()
@@ -29,9 +33,14 @@ class MainViewModel : ViewModel() {
     var prevLink = ""
     val prevChapter = ""
     var loading by mutableStateOf(false)
-    val preferences = "Web2ReadSharedStorage"
-    val preferences_comics = "Web2ReadSharedStorageSubscribedComics"
+    private val preferences = "Web2ReadSharedStorage"
+    private val preferences_comics = "Web2ReadSharedStorageSubscribedComics"
+    private val recentSearchKey = "recentSearchSavedItems"
+    private val openedChaptersKey = "opened_chapters_storage_key"
     val subscribedComics = SnapshotStateList<ComicInfo>()
+    val savedSearches = SnapshotStateList<String>()
+    var loaderInfo by mutableIntStateOf(0)
+
 
 
     fun subscribe(comicInfo: ComicInfo, context: Context){
@@ -64,9 +73,67 @@ class MainViewModel : ViewModel() {
         val type = object : TypeToken<List<ComicInfo>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
+    fun addSearchItem(item:String, context: Context){
+        viewModelScope.launch {
+            val data = getSearchItems(context).toMutableList()
+            data.remove(item)
+            data.add(item)
+            savedSearches.clear()
+            savedSearches.addAll(data.reversed())
+            saveSearchItems(data, context)
+        }
+    }
+    fun removeSearchItem(item:String, context: Context){
+        viewModelScope.launch {
+            val data = getSearchItems(context).toMutableList()
+            data.remove(item)
+            savedSearches.clear()
+            savedSearches.addAll(data.reversed())
+            saveSearchItems(data, context)
+        }
+    }
+    private fun saveSearchItems(list: List<String>, context: Context) {
+        val editor = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).edit()
+        val gson = Gson()
+        val json = gson.toJson(list)
+        editor.putString(recentSearchKey, json)
+        editor.apply()
+    }
+    fun getSearchItems(context: Context): List<String> {
+        val gson = Gson()
+        val json = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).getString(recentSearchKey, null)
+        val type = object : TypeToken<List<String>>() {}.type
+        return gson.fromJson(json, type) ?: emptyList()
+    }
+
+    fun addReadChapter(item:String, context: Context){
+        viewModelScope.launch {
+            val gson = Gson()
+            val json = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).getString(openedChaptersKey, null)
+            val type = object : TypeToken<HashSet<String>>() {}.type
+            val data:HashSet<String> = gson.fromJson(json, type)?: hashSetOf("")
+            data.remove(item)
+            data.add(item)
+            saveReadChapter(data, context)
+        }
+    }
+    private fun saveReadChapter(list: HashSet<String>, context: Context) {
+        val editor = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).edit()
+        val gson = Gson()
+        val json = gson.toJson(list)
+        editor.putString(openedChaptersKey, json)
+        editor.apply()
+    }
+    fun findReadChapter(item:String ,context: Context): Boolean {
+        val gson = Gson()
+        val json = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).getString(openedChaptersKey, null)
+        val type = object : TypeToken<HashSet<String>>() {}.type
+        val data:HashSet<String> = gson.fromJson(json, type)?: hashSetOf("")
+        return data.contains(item)
+    }
 
 
-    fun getAsura(api: Scrapper, show: Int, mainNavController: NavController? = null){
+    fun getAsura(api: Scrapper, show: Int, mainNavController: NavController? = null, context: Context){
         val current = comicInfo.chapters[show]
         viewModelScope.launch {
             loading = true
@@ -94,6 +161,8 @@ class MainViewModel : ViewModel() {
                         show
                     )
                     currentChapterName = current.name
+                    addReadChapter(current.link, context)
+                    comicInfo.chapters[show].read=true
                 }
             }
             mainNavController?.navigate(Screen.ChapterUi.route){
@@ -104,14 +173,22 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun getComicInfo(api: Scrapper, title:String, image:String, link: String, mainNavController: NavController){
+    fun getComicInfo(api: Scrapper, title:String, image:String, link: String, mainNavController: NavController, context: Context, loader:Boolean = false){
         viewModelScope.launch {
             if(prevLink!=link){
-                loading = true
+                if(loader){
+                    loaderInfo++
+                } else {
+                    loading = true
+                }
                 prevLink = link
                 val fLink = link.substring(22)
                 val response = api.getAsura(fLink)
                 if (response.isSuccessful && response.body() != null) {
+                    val gson = Gson()
+                    val json = context.getSharedPreferences(preferences, Context.MODE_PRIVATE).getString(openedChaptersKey, null)
+                    val type = object : TypeToken<HashSet<String>>() {}.type
+                    val setData:HashSet<String> = gson.fromJson(json, type)?: hashSetOf("")
                     val data = Jsoup.parse(response.body())
                     val altTitle = data.select("div.wd-full:nth-child(3) > span:nth-child(2)").text()
                     val rating = data.select("div.rating").select("div.num").attr("content")
@@ -146,42 +223,51 @@ class MainViewModel : ViewModel() {
                             Chapter(
                                 titlenn,
                                 linknn,
-                                datenn
+                                datenn,
+                                setData.contains(linknn)
                             )
                         )
 //                    Log.d("testasu", linknn)
                     }
-                    comicInfo = ComicInfo(
-                        title = title,
-                        image = image,
-                        rating = rating,
-                        alternativeTitle = altTitle,
-                        synopsis = synopsis,
-                        fbLink = fb,
-                        waLink = wa,
-                        twLink = tw,
-                        piLink = pn,
-                        author = author,
-                        artist = artist,
-                        postedOn = posted,
-                        genre = genre,
-                        chapters = chaptersL,
-                        followedBy = foll,
-                        link = link
-                    )
-
+                    if(loader){
+//                        subscribedComics
+                    } else {
+                        comicInfo = ComicInfo(
+                            title = title,
+                            image = image,
+                            rating = rating,
+                            alternativeTitle = altTitle,
+                            synopsis = synopsis,
+                            fbLink = fb,
+                            waLink = wa,
+                            twLink = tw,
+                            piLink = pn,
+                            author = author,
+                            artist = artist,
+                            postedOn = posted,
+                            genre = genre,
+                            chapters = chaptersL,
+                            followedBy = foll,
+                            link = link
+                        )
+                    }
                 }
             }
-            mainNavController.navigate(Screen.ComicInfo.route){
-                popUpTo(mainNavController.graph.findStartDestination().id)
-                launchSingleTop = true
+            if(loader){
+                loaderInfo--
+            } else {
+                mainNavController.navigate(Screen.ComicInfo.route){
+                    popUpTo(mainNavController.graph.findStartDestination().id)
+                    launchSingleTop = true
+                }
+                loading = false
+
             }
-            loading = false
         }
     }
     fun popularToday(api: Scrapper) {
         viewModelScope.launch {
-            loading = true
+//            loading = true
             val response = api.getAsura("")
             if (response.isSuccessful && response.body() != null) {
 //                Log.d("asura1", response.body().toString())
@@ -281,7 +367,9 @@ class MainViewModel : ViewModel() {
                 latestRelease.addAll(ltpList)
 //                    latestRelease.forEach { Log.d("asura1", it.toString()) }
             }
-            loading = false
+//            loading = false
+            delay(2000)
+            showSplashScreen = false
         }
     }
 }
@@ -321,7 +409,8 @@ data class LatestRelease(
 data class Chapter(
     val name: String,
     val link: String,
-    val time: String
+    val time: String,
+    var read: Boolean = false
 )
 
 data class PopularToday(

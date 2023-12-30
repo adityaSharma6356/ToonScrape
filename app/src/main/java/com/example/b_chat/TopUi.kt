@@ -4,7 +4,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -35,18 +33,16 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -58,20 +54,20 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
         var switch = true
         while(true){
             delay(5000)
-            if(pagerState.canScrollForward && switch){
+            switch = if(pagerState.canScrollForward && switch){
                 pagerState.animateScrollToPage(pagerState.currentPage+1)
-                switch = true
+                true
             } else if(pagerState.canScrollBackward){
                 pagerState.animateScrollToPage(pagerState.currentPage-1)
-                switch = false
+                false
             } else {
-                switch = true
+                true
             }
         }
     }
     Box(modifier = Modifier.fillMaxWidth()) {
 
-
+        val context = LocalContext.current
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) {
             Box(modifier = Modifier
 //        .padding(top = 50.dp)
@@ -84,7 +80,8 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
                         mainViewModel.topList[it].title,
                         mainViewModel.topList[it].image,
                         mainViewModel.topList[it].link,
-                        mainNavController
+                        mainNavController,
+                        context
                     )
                 }) {
                 val painter = rememberAsyncImagePainter(model = mainViewModel.topList[it].image)
@@ -105,13 +102,14 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
                     painter = painter,
                     contentDescription = "image",
                     modifier = Modifier
-                        .padding(0.dp, 65.dp, 30.dp, 0.dp)
+                        .padding(0.dp, 0.dp, 30.dp, 0.dp)
                         .width(120.dp)
-                        .align(Alignment.TopEnd),
+                        .align(Alignment.CenterEnd),
                     contentScale = ContentScale.FillWidth,
                 )
                 Column(
-                    Modifier
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
                         .fillMaxHeight()
                         .width(250.dp)
                 ) {
@@ -122,7 +120,7 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(20.dp, 55.dp, 10.dp, 0.dp),
+                        modifier = Modifier.padding(20.dp, 0.dp, 10.dp, 0.dp),
                         fontFamily = FontFamily.SansSerif
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -174,7 +172,7 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
             .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-            for(i in 0..mainViewModel.topList.size){
+            for(i in 0 until mainViewModel.topList.size) {
                 val width by remember { derivedStateOf { if(pagerState.currentPage==i) 10.dp else 5.dp }}
                 Spacer(modifier = Modifier.padding(0.dp).animateContentSize().height(5.dp).width(width).background(Color(
                     218,

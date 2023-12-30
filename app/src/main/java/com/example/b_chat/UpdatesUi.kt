@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,16 +30,16 @@ import coil.compose.AsyncImage
 
 @Composable
 fun UpdatesUi(mainViewModel: MainViewModel, mainNavController: NavHostController, api: Scrapper){
-    Column(modifier = Modifier.fillMaxWidth().background(Color(9, 9, 9, 255)), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = Modifier.fillMaxWidth().background(MainTheme.background), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "Latest Updates",
             color = Color.White,
             fontSize = 19.sp,
             fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(10.dp, 20.dp, 0.dp, 5.dp).align(Alignment.Start),
+            modifier = Modifier.padding(20.dp, 20.dp, 0.dp, 0.dp).align(Alignment.Start),
             fontFamily = FontFamily.SansSerif,
         )
-
+        val context = LocalContext.current
         val size by remember { mutableStateOf(minOf(10, mainViewModel.latestRelease.size)) }
         mainViewModel.latestRelease.forEachIndexed { i, _ ->
             if(i<=10){
@@ -46,7 +47,14 @@ fun UpdatesUi(mainViewModel: MainViewModel, mainNavController: NavHostController
                     .fillMaxWidth()
                     .height(190.dp)
                     .clickable {
-                        mainViewModel.getComicInfo(api,mainViewModel.latestRelease[i].title,mainViewModel.latestRelease[i].image,mainViewModel.latestRelease[i].link ,mainNavController)
+                        mainViewModel.getComicInfo(
+                            api,
+                            mainViewModel.latestRelease[i].title,
+                            mainViewModel.latestRelease[i].image,
+                            mainViewModel.latestRelease[i].link,
+                            mainNavController,
+                            context
+                        )
                     },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

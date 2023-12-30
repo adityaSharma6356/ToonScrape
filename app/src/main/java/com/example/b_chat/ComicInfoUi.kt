@@ -1,7 +1,12 @@
 package com.example.b_chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +29,7 @@ import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -49,17 +56,43 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: NavHostController){
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())) {
+    val state = rememberScrollState()
+    val showName by remember { derivedStateOf { state.value>400 } }
+    AnimatedVisibility(modifier = Modifier
+        .fillMaxWidth()
+        .height(80.dp)
+        .zIndex(1f),visible = showName, enter = fadeIn(), exit = fadeOut(),
+    ) {
         Box(modifier = Modifier
             .fillMaxSize()
-            .background(Color(9, 9, 9))) {
+            .background(MainTheme.background),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Text(
+                text = mainViewModel.comicInfo.title,
+                fontSize = 20.sp,
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.padding(10.dp).basicMarquee(),
+                maxLines = 1
+            )
+        }
+    }
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(state)) {
+        val context = LocalContext.current
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(MainTheme.background)) {
             Image(
                 painter = rememberAsyncImagePainter(model = mainViewModel.comicInfo.image),
                 contentDescription = "cover",
@@ -120,7 +153,7 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                             Row {
                                 Text(
                                     text = subText,
-                                    color = Color(9, 9, 9),
+                                    color = MainTheme.background,
                                     fontFamily = FontFamily.SansSerif,
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.ExtraBold,
@@ -258,13 +291,14 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                         modifier = Modifier
                             .width(width.dp)
                             .heightIn(min = 50.dp)
-                            .background(Color(31, 31, 31, 255), RoundedCornerShape(10.dp))
+                            .background(MainTheme.lightBackground, RoundedCornerShape(10.dp))
                             .padding(5.dp)
                             .clickable {
                                 mainViewModel.getAsura(
                                     api,
                                     mainViewModel.comicInfo.chapters.lastIndex,
-                                    mainNavController
+                                    mainNavController,
+                                    context
                                 )
                             }
                     ) {
@@ -282,13 +316,14 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                         modifier = Modifier
                             .width(width.dp)
                             .heightIn(min = 50.dp)
-                            .background(Color(31, 31, 31, 255), RoundedCornerShape(10.dp))
+                            .background(MainTheme.lightBackground, RoundedCornerShape(10.dp))
                             .padding(5.dp)
                             .clickable {
                                 mainViewModel.getAsura(
                                     api,
                                     0,
-                                    mainNavController
+                                    mainNavController,
+                                    context
                                 )
                             }
                     ) {
@@ -307,7 +342,7 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                 Column(
                     modifier = Modifier
                         .padding(10.dp, 20.dp)
-                        .background(Color(31, 31, 31, 255), RoundedCornerShape(10.dp))
+                        .background(MainTheme.lightBackground, RoundedCornerShape(10.dp))
                         .fillMaxWidth()
                         .heightIn(max = 600.dp)
                         .verticalScroll(
@@ -321,12 +356,13 @@ fun ComicInfoUi(mainViewModel: MainViewModel, api: Scrapper, mainNavController: 
                                 mainViewModel.getAsura(
                                     api,
                                     index,
-                                    mainNavController
+                                    mainNavController,
+                                    context
                                 )
                             }) {
                             Text(
                                 text = it.name,
-                                color = Color(206, 206, 206, 255),
+                                color = if(it.read) Color(55, 65, 100, 255) else  Color(206, 206, 206, 255),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 16.sp,
                                 fontFamily = FontFamily.SansSerif,

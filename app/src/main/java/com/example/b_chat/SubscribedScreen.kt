@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +34,7 @@ fun SubscribesScreen(
     api: Scrapper,
     mainNavController: NavHostController
 ){
+    val context = LocalContext.current
     Column(modifier = Modifier
         .fillMaxSize()
         .verticalScroll(rememberScrollState())) {
@@ -57,7 +59,8 @@ fun SubscribesScreen(
                         item.title,
                         item.image,
                         item.link,
-                        mainNavController
+                        mainNavController,
+                        context
                     )
                 },
                 verticalAlignment = Alignment.CenterVertically

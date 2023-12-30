@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,18 +40,19 @@ fun PopularTodayUi(
 ){
     val width = LocalConfiguration.current.screenWidthDp/3
     val height = width*1.5
-    Box(modifier = Modifier.background(Color(9,9,9))){
+    val context = LocalContext.current
+    Box(modifier = Modifier.background(MainTheme.background)){
         Column(modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = height.dp)
-            .background(Color(24, 24, 24, 255), RoundedCornerShape(0.dp, 0.dp, 30.dp, 30.dp))
+            .background(MainTheme.lightBackground, RoundedCornerShape(0.dp, 0.dp, 30.dp, 30.dp))
         ) {
             Text(
                 text = "Popular Today",
                 color = Color.White,
                 fontSize = 19.sp,
                 fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(10.dp, 20.dp, 0.dp, 5.dp),
+                modifier = Modifier.padding(10.dp, 20.dp, 0.dp, 0.dp),
                 fontFamily = FontFamily.SansSerif
             )
 
@@ -69,7 +71,8 @@ fun PopularTodayUi(
                                 mainViewModel.popularToday[it].title,
                                 mainViewModel.popularToday[it].image,
                                 mainViewModel.popularToday[it].link,
-                                mainNavController
+                                mainNavController,
+                                context
                             )
 
                         },

@@ -48,7 +48,7 @@ fun BottomBar(navController: NavHostController, modifier: Modifier) {
 
     Row(
         modifier = modifier
-            .background(Color(22, 22, 22, 255))
+            .background(MainTheme.lightBackground)
             .fillMaxWidth()
             .height(105.dp)
             .padding(top = 3.dp),
