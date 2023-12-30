@@ -8,26 +8,23 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 ### 1. Immersive Reading Mode
 - Full immersion mode allows system bars to disappear while reading, providing an immersive and distraction-free reading experience.
 
-| ![Screenshot 1](sample/photo_1_2023-12-30_19-03-42.jpg =x100) | ![Screenshot 1](sample/photo_3_2023-12-30_19-03-42.jpg =x100) |
-|---------------------------------------------------------------|---------------------------------------------------------------|
+| <img alt="Screenshot 1" src="sample/one.jpg" width="100"/> | <img alt="Screenshot 1" src="sample/two.jpg" width="100"/> |
+|------------------------------------------------------------|------------------------------------------------------------|
 
 ## Demo Video
-<video width="100" height="240" controls>
-  <source src="sample/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[Demo](sample/demo.mp4)
 
 ### 2. Subscription Management
 - Users can subscribe to their favorite manhwa series for easy access and updates.
-![Screenshot 1](sample/photo_2_2023-12-30_19-03-42.jpg =x100)
+  <img alt="Screenshot 1" src="sample/two.jpg" width="100"/>
 
 ### 3. Popular Manhwa
 - Stay updated with what's popular nowadays in the world of manhwa.
 
 ## Screenshots
 
-| ![Screenshot 1](sample/photo_5_2023-12-30_19-03-42.jpg =x100) | ![Screenshot 2](sample/photo_6_2023-12-30_19-03-42.jpg =x100) | ![Screenshot 1](sample/photo_4_2023-12-30_19-03-42.jpg =x100) |
-|---------------------------------------------------------------|---------------------------------------------------------------|---------------------------------------------------------------|
+| <img alt="Screenshot 1" src="sample/fiv.jpg" width="100"/> | <img alt="Screenshot 2" src="sample/six" width="100"/> | <img alt="Screenshot 1" src="sample/fou.jpg" width="100"/> |
+|------------------------------------------------------------|--------------------------------------------------------|------------------------------------------------------------|
 
 
 
