@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,27 +34,28 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.b_chat.data.ComicsData
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, api: Scrapper){
+fun TopUi(
+    list:List<ComicsData>,
+    onClick: (ComicsData) -> Unit
+){
     val pagerState = rememberPagerState(0, 0f, pageCount = {
-        mainViewModel.topList.size
+        list.size
     })
     LaunchedEffect(key1 = "Run"){
         var switch = true
         while(true){
-            delay(5000)
+            delay(3000)
             switch = if(pagerState.canScrollForward && switch){
                 pagerState.animateScrollToPage(pagerState.currentPage+1)
                 true
@@ -66,25 +68,15 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
         }
     }
     Box(modifier = Modifier.fillMaxWidth()) {
-
-        val context = LocalContext.current
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) {
             Box(modifier = Modifier
-//        .padding(top = 50.dp)
                 .fillMaxWidth()
                 .background(Color.Transparent)
                 .height(280.dp)
                 .clickable {
-                    mainViewModel.getComicInfo(
-                        api,
-                        mainViewModel.topList[it].title,
-                        mainViewModel.topList[it].image,
-                        mainViewModel.topList[it].link,
-                        mainNavController,
-                        context
-                    )
+                    onClick(list[it])
                 }) {
-                val painter = rememberAsyncImagePainter(model = mainViewModel.topList[it].image)
+                val painter = rememberAsyncImagePainter(model = list[it].image)
                 Image(
                     painter = painter,
                     contentDescription = "image",
@@ -98,71 +90,73 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
                         blendMode = BlendMode.Darken
                     )
                 )
-                Image(
-                    painter = painter,
-                    contentDescription = "image",
-                    modifier = Modifier
-                        .padding(0.dp, 0.dp, 30.dp, 0.dp)
-                        .width(120.dp)
-                        .align(Alignment.CenterEnd),
-                    contentScale = ContentScale.FillWidth,
-                )
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(250.dp)
-                ) {
-                    Text(
-                        text = mainViewModel.topList[it].title,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(20.dp, 0.dp, 10.dp, 0.dp),
-                        fontFamily = FontFamily.SansSerif
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            tint = Color.Yellow,
-                            painter = painterResource(id = R.drawable.star),
-                            contentDescription = "star",
-                            modifier = Modifier
-                                .padding(20.dp, 0.dp, 0.dp, 0.dp)
-                                .size(15.dp)
-                        )
+                Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(250.dp)
+                    ) {
                         Text(
-                            text = mainViewModel.topList[it].score.toString(),
-                            color = Color(255, 232, 170, 255),
-                            fontSize = 14.sp,
-                            maxLines = 1,
+                            text = list[it].name,
+                            color = Color.White,
+                            fontSize = 20.nonScaledSp,
+                            maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(3.dp, 0.dp, 10.dp, 0.dp),
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(20.dp, 0.dp, 10.dp, 0.dp),
                             fontFamily = FontFamily.SansSerif
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                tint = Color.Yellow,
+                                painter = painterResource(id = R.drawable.star),
+                                contentDescription = "star",
+                                modifier = Modifier
+                                    .padding(20.dp, 0.dp, 0.dp, 0.dp)
+                                    .size(15.dp)
+                            )
+                            Text(
+                                text = list[it].rating,
+                                color = Color(255, 232, 170, 255),
+                                fontSize = 14.nonScaledSp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(3.dp, 0.dp, 10.dp, 0.dp),
+                                fontFamily = FontFamily.SansSerif
+                            )
+                            Text(
+                                text = list[it].genre.joinToString(", "),
+                                color = Color(179, 179, 179, 255),
+                                fontSize = 14.nonScaledSp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(5.dp, 5.dp, 10.dp, 5.dp),
+                                fontFamily = FontFamily.SansSerif
+                            )
+                        }
+
                         Text(
-                            text = mainViewModel.topList[it].genre,
-                            color = Color(179, 179, 179, 255),
-                            fontSize = 14.sp,
-                            maxLines = 1,
+                            text = list[it].synopsis,
+                            color = Color(207, 207, 207, 255),
+                            fontSize = 14.nonScaledSp,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(5.dp, 5.dp, 10.dp, 5.dp),
+                            maxLines = 4,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(20.dp, 0.dp, 10.dp, 10.dp),
                             fontFamily = FontFamily.SansSerif
                         )
                     }
-
-                    Text(
-                        text = mainViewModel.topList[it].summary,
-                        color = Color(207, 207, 207, 255),
-                        fontSize = 14.sp,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 4,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(20.dp, 0.dp, 10.dp, 10.dp),
-                        fontFamily = FontFamily.SansSerif
+                    Image(
+                        painter = painter,
+                        contentDescription = "image",
+                        modifier = Modifier
+                            .padding(0.dp, 0.dp, 20.dp, 0.dp)
+                            .width(120.dp),
+                        contentScale = ContentScale.FillWidth,
                     )
                 }
+
 
             }
         }
@@ -172,16 +166,22 @@ fun TopUi(mainViewModel: MainViewModel, mainNavController: NavHostController, ap
             .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-            for(i in 0 until mainViewModel.topList.size) {
+            for(i in list.indices) {
                 val width by remember { derivedStateOf { if(pagerState.currentPage==i) 10.dp else 5.dp }}
-                Spacer(modifier = Modifier.padding(0.dp).animateContentSize().height(5.dp).width(width).background(Color(
-                    218,
-                    218,
-                    218,
-                    255
-                ),
-                    RoundedCornerShape(50)
-                ))
+                Spacer(modifier = Modifier
+                    .padding(0.dp)
+                    .animateContentSize()
+                    .height(5.dp)
+                    .width(width)
+                    .background(
+                        Color(
+                            218,
+                            218,
+                            218,
+                            255
+                        ),
+                        RoundedCornerShape(50)
+                    ))
             }
         }
     }

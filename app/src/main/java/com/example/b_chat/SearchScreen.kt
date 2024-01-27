@@ -1,12 +1,14 @@
 package com.example.b_chat
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -21,16 +23,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
@@ -38,57 +41,72 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+
 @Composable
 fun SearchScreen(
     mainViewModel: MainViewModel,
-
-){
-    val context = LocalContext.current
+    mainNavController: NavHostController,
+    ){
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(50.dp))
-        var showSearchResult by remember { mutableStateOf("") }
-        var value by remember { mutableStateOf("") }
+        var colorChanger by remember { mutableStateOf(false) }
         val focusManager = LocalFocusManager.current
         val source = remember {
             MutableInteractionSource()
         }
+        var borderColor by remember { mutableStateOf (Color.White) }
+        if(source.collectIsPressedAsState().value){
+            colorChanger = true
+        }
+        if(colorChanger){
+            borderColor = MainTheme.navColor
+            BackHandler {
+                focusManager.clearFocus()
+                colorChanger = false
+                borderColor  = Color.White
+            }
+        }
+
         SearchTextField(
-            value = value,
-            onValueChange = { value = it },
+            value = mainViewModel.searchQuery,
+            onValueChange = { mainViewModel.searchQuery = it },
             modifier = Modifier
                 .padding(20.dp, 0.dp)
                 .fillMaxWidth()
                 .height(40.dp),
             leadingIcon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.search_icon),
+                    painter = painterResource(id = R.drawable.search),
                     contentDescription = "search",
                     tint = Color.White,
                     modifier = Modifier
@@ -97,85 +115,103 @@ fun SearchScreen(
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions {
-                if (value.isNotBlank()) {
-                    showSearchResult = value
-                    mainViewModel.addSearchItem(value, context)
+                if (mainViewModel.searchQuery.isNotBlank()) {
+                    mainViewModel.showSearchResult = mainViewModel.searchQuery
                     focusManager.clearFocus()
+                    mainViewModel.search(mainViewModel.searchQuery)
                 }
             },
             trailingIcon = {
-                if (value.isNotBlank()) {
+                if (mainViewModel.searchQuery.isNotBlank()) {
                     Icon(
                         painter = painterResource(id = R.drawable.cancel),
                         contentDescription = "cancel",
                         tint = Color.White,
                         modifier = Modifier
                             .size(15.dp)
-                            .clickable { value = "" }
+                            .clickable { mainViewModel.searchQuery = "" }
                     )
                 }
             },
             enabled = true,
-            interactionSource = source
+            interactionSource = source,
+            borderColor = borderColor
         )
-        var openPast by remember {
-            mutableStateOf(false)
-        }
-        if(source.collectIsPressedAsState().value){
-            openPast = true
-        }
-        if(mainViewModel.savedSearches.isNotEmpty() && openPast){
-            BackHandler {
-                focusManager.clearFocus()
-                openPast = false
-            }
-            Column(
+        val width = ((LocalConfiguration.current.screenWidthDp / 4) - 20) / 2
+        if(mainViewModel.noResult){
+            Text(
+                text = "No matching result",
+                color = MainTheme.navColor,
+                fontSize = 17.sp,
                 modifier = Modifier
-                    .padding(top = 15.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                mainViewModel.savedSearches.forEach{
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(20.dp, 5.dp)
-                            .fillMaxWidth()
-                            .clickable {
-                                value = it
-                                showSearchResult = it
-                            }
-                            .padding(10.dp, 5.dp)
-                    ) {
-                        Text(
-                            text = it,
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontFamily = FontFamily.SansSerif,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
+                    .padding(top = 20.dp)
+                    .align(Alignment.CenterHorizontally),
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if(mainViewModel.showSearchResult.isNotBlank() && !mainViewModel.noResult){
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,color = MainTheme.navColor
                         )
-                        Icon(
-                            painter = painterResource(id = R.drawable.cancel),
-                            contentDescription = "remove",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .padding(start = 10.dp)
-                                .size(12.dp)
-                                .clickable {
-                                    mainViewModel.removeSearchItem(
-                                        it,
-                                        context
-                                    )
-                                }
+                        ) {
+                            append("showing results for \"")
+                        }
+                        withStyle(style = SpanStyle(color = Color.White)) {
+                            append(mainViewModel.showSearchResult)
+                        }
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,color = MainTheme.navColor
                         )
-                    }
-                }
+                        ) {
+                            append("\"")
+                        }
+                    },
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(20.dp, 15.dp, 0.dp, 5.dp),
+                    fontFamily = FontFamily.SansSerif
+                )
+                Text(
+                    text = "clear",
+                    color = MainTheme.navColor,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(0.dp, 15.dp, 20.dp, 5.dp).clickable {
+                        mainViewModel.showSearchResult = ""
+                        mainViewModel.searchResult.clear() },
+                    fontFamily = FontFamily.SansSerif
+                )
+
             }
-        } else {
-            var genreData by remember { mutableStateOf<Genre?>(null) }
-            val width = ((LocalConfiguration.current.screenWidthDp / 4) - 20) / 2
+        }
+        if(mainViewModel.loadingSearchResult){
+            val infiniteTransition = rememberInfiniteTransition(label = "loading")
+            val angle by infiniteTransition.animateFloat(
+                initialValue = 0F,
+                targetValue = 360F,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2000, easing = LinearEasing)
+                ),
+                label = "loading"
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.dotted_loading),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(top = 50.dp)
+                    .fillMaxWidth(0.1f)
+                    .graphicsLayer {
+                        rotationZ = angle
+                    }
+                    .align(Alignment.CenterHorizontally),
+                tint = MainTheme.navColor
+            )
+        } else if(mainViewModel.searchResult.isEmpty()){
             Text(
                 text = "Top Genres",
                 color = Color.White,
@@ -188,16 +224,20 @@ fun SearchScreen(
                 modifier = Modifier
                     .padding(10.dp)
                     .fillMaxWidth(),
-                columns = GridCells.Fixed(4)
+                columns = GridCells.Fixed(4),
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
-                itemsIndexed(genreList) { index, item ->
+                itemsIndexed(genreList) { _, item ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(5.dp)
                     ) {
                         Box(modifier = Modifier
                             .clip(CircleShape)
-                            .clickable { genreData = item }
+                            .clickable {
+                                mainViewModel.showSearchResult = item.name
+                                mainViewModel.search(item.link, true)
+                            }
                             .background(MainTheme.lightBackground)
                             .padding(20.dp),
                             contentAlignment = Alignment.Center) {
@@ -211,7 +251,7 @@ fun SearchScreen(
                         Text(
                             text = item.name,
                             color = Color.White,
-                            fontSize = 12.sp,
+                            fontSize = 12.nonScaledSp,
                             modifier = Modifier.padding(0.dp, 10.dp),
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Thin
@@ -219,54 +259,95 @@ fun SearchScreen(
                     }
                 }
             }
+        } else {
+            val widthCustom = LocalConfiguration.current.screenWidthDp/3
+            val height = widthCustom*1.5
+            LazyColumn(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = 100.dp)){
+                itemsIndexed(mainViewModel.searchResult){ _, comic ->
+                    Row(modifier = Modifier.fillMaxWidth().clickable { mainViewModel.getComicInfo(comic, mainNavController) }) {
+                        Card(modifier = Modifier
+                            .padding(20.dp, 20.dp, 10.dp, 20.dp)
+                            .size(widthCustom.dp, height.dp)) {
+                            AsyncImage(
+                                model = comic.image,
+                                contentDescription = "image",
+                                modifier = Modifier
+                                    .width(width.dp)
+                                    .height(height.dp),
+                                filterQuality = FilterQuality.None,
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Column(modifier = Modifier
+                            .padding(top = 25.dp)
+                            .weight(1f)
+                            .align(Alignment.Top)) {
+                            Text(
+                                text = comic.name,
+                                color = Color(255, 255, 255, 255),
+                                fontSize = 17.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 5.dp),
+                                fontFamily = FontFamily.SansSerif
+                            )
+                            Text(
+                                text = comic.chaptersData.first().name,
+                                color = Color(255, 255, 255, 153),
+                                fontSize = 13.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(5.dp, 5.dp, 10.dp, 5.dp),
+                                fontFamily = FontFamily.SansSerif
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    tint = Color.Yellow,
+                                    painter = painterResource(id = R.drawable.star),
+                                    contentDescription = "star",
+                                    modifier = Modifier
+                                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                        .size(15.dp)
+                                )
+                                Text(
+                                    text = comic.rating,
+                                    color = Color(255, 232, 170, 255),
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(3.dp, 0.dp, 10.dp, 0.dp),
+                                    fontFamily = FontFamily.SansSerif
+                                )
+                            }
+                            Text(
+                                text = comic.type.uppercase(),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .padding(5.dp, 10.dp, 10.dp, 5.dp)
+                                    .drawBehind {
+                                        drawRoundRect(
+                                            MainTheme.navColor,
+                                            cornerRadius = CornerRadius(10f, 10f)
+                                        )
+                                    }
+                                    .padding(5.dp),
+                                fontFamily = FontFamily.SansSerif
+                            )
 
+                        }
+                    }
+
+
+                }
+            }
         }
 
-//        if(genreData!=null){
-//            Row(verticalAlignment = Alignment.CenterVertically) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.left_icon),
-//                    contentDescription = "back",
-//                    tint = Color.White,
-//                    modifier = Modifier
-//                        .padding(start = 20.dp, end = 10.dp)
-//                        .size(30.dp)
-//                        .clickable { genreData = null }
-//                )
-//                Text(
-//                    text = genreData?.name?: "",
-//                    color = Color.White,
-//                    fontSize = 17.sp,
-//                    fontFamily = FontFamily.SansSerif,
-//                    fontWeight = FontWeight.ExtraBold
-//                )
-//            }
-//        } else {
-//            if(showSearchResult.isNotBlank()){
-//                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top=15.dp)) {
-//                    Icon(
-//                        painter = painterResource(id = R.drawable.left_icon),
-//                        contentDescription = "back",
-//                        tint = Color.White,
-//                        modifier = Modifier
-//                            .padding(start = 20.dp, end = 10.dp, top = 0.dp)
-//                            .size(30.dp)
-//                            .clickable { showSearchResult = "" }
-//                    )
-//                    Text(
-//                        text = showSearchResult,
-//                        color = Color.White,
-//                        fontSize = 17.sp,
-//                        maxLines = 1,
-//                        fontFamily = FontFamily.SansSerif,
-//                        fontWeight = FontWeight.ExtraBold
-//                    )
-//                }
-//
-//            } else {
-
-
-//            }
 
 
     }
@@ -283,7 +364,8 @@ fun SearchTextField(
     keyboardActions: KeyboardActions,
     keyboardOptions: KeyboardOptions,
     enabled:Boolean,
-    interactionSource: MutableInteractionSource
+    interactionSource: MutableInteractionSource,
+    borderColor: Color
 ){
     BasicTextField(
         textStyle = TextStyle(
@@ -292,7 +374,7 @@ fun SearchTextField(
         cursorBrush = Brush.horizontalGradient(listOf(Color.White, Color.White)),
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.border(1.dp, Color.White, RoundedCornerShape(5.dp)),
+        modifier = modifier.border(1.dp, borderColor , RoundedCornerShape(5.dp)),
         visualTransformation = VisualTransformation.None,
         interactionSource = interactionSource,
         keyboardActions = keyboardActions,

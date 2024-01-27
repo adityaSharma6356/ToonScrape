@@ -7,7 +7,6 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 
 ### 1. Immersive Reading Mode
 - Full immersion mode allows system bars to disappear while reading, providing an immersive and distraction-free reading experience.
-
 | <img alt="Screenshot 1" src="sample/one.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/thr.jpg" width="150"/> |
 |------------------------------------------------------------|------------------------------------------------------------|
 
@@ -15,16 +14,20 @@ ToonScrape is an Android application developed in Kotlin using Jetpack Compose t
 - Users can subscribe to their favorite manhwa series for easy access and updates.
 <img alt="Screenshot 1" src="sample/two.jpg" width="150"/>
 
-### 3. Popular Manhwa
+### 3. Find what you like
+- Use the search by Genre, title or keyword to find the manhwa that you like.
+<img alt="Screenshot 1" src="sample/sev.jpg" width="150"/>
+
+### 4. Popular Manhwa
 - Stay updated with what's popular nowadays in the world of manhwa.
 
+### 5. In App Updates
+- Get an update prompt to know about latest releases.
+<img alt="Screenshot 2" src="sample/six.jpg" width="150"/>
+
 ## Screenshots
-
-| <img alt="Screenshot 1" src="sample/fiv.jpg" width="150"/> | <img alt="Screenshot 2" src="sample/six.jpg" width="150"/> | <img alt="Screenshot 1" src="sample/fou.jpg" width="150"/> |
-|------------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------|
-
-## Demo Video
-[Demo](https://drive.google.com/file/d/16THcRnmyTc4P0-XW5mW29tvRfH6wDcsX/view?usp=sharing)
+| <img alt="Screenshot 1" src="sample/fiv.jpg" width="150"/> |  <img alt="Screenshot 1" src="sample/fou.jpg" width="150"/> |
+|------------------------------------------------------------|-------------------------------------------------------------|
 
 
 ## Getting Started
