@@ -3,6 +3,9 @@
 ## Overview
 ToonScrape is an Android application developed in Kotlin using Jetpack Compose that provides a delightful and immersive reading experience for manhwa enthusiasts. The app allows users to explore and read manhwa from the internet, featuring a user-friendly UI and various convenient features.
 
+Get Here:
+https://sourceforge.net/projects/web2read/
+
 ## Features
 
 ### 1. Immersive Reading Mode

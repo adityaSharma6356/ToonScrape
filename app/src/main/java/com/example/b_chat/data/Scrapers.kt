@@ -15,7 +15,7 @@ class MainScraper(
     private val apiSF: Scrapper,
 ) {
 
-    private val app_version = 0.2
+    private val app_version = 0.1
 
     suspend fun searchScraper(query:String, byGenre:Boolean = false): List<ComicsData> {
         val scraperLink = if(byGenre) {

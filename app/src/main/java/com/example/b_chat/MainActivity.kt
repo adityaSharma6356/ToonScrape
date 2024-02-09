@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
             .baseUrl("https://asuratoon.com/")
             .addConverterFactory(ScalarsConverterFactory.create())
             .build()
+
         val retroSF = Retrofit.Builder()
             .baseUrl("https://snowflake-streamer.000webhostapp.com/")
             .addConverterFactory(ScalarsConverterFactory.create())
